@@ -70,6 +70,10 @@ typedef tuple< int, int, int > III;
  
  16:45-18:58,21:10-21:40 add solution
  
+ 4/27/2018
+ 
+ Add performance optimization.
+ 
  */
 
 // $ g++ -std=c++11 -Wall -O2 -D_GLIBCXX_DEBUG x.cpp && ./a.out
@@ -96,12 +100,15 @@ Node Node::IDE=Node();
 Node merge(const Node &a, const Node &b) {
   Node res=Node();
   REP(i1,N)REP(i2,N) {
+    /*
     REP(x1,N) REP(x2,N) if(abs(x1-x2)<=1) {
       SMAX(res.dist[i1][i2],a.dist[i1][x1]+b.dist[x2][i2]);
-    }
+    }*/
+    REP(x,N) FORE(o,-1,1) if(0<=x+o&&x+o<N) SMAX(res.dist[i1][i2],a.dist[i1][x]+b.dist[x+o][i2]);
   }
   return res;
 }
+// ⚠️ Customize node of segment tree
 
 struct SegmentTree {
 public:
@@ -129,18 +136,6 @@ public:
   // query in range [L,R)
   Node query(int L, int R) {
     return queryTree(L,R,0,0,N__);
-  }
-  
-  // ⚠️ Override point
-  // Note that operation should be associative A`op`(B`op`C) == (A`op`B)`op`C
-  Node merge(const Node &a, const Node &b) {
-    Node res=Node();
-    REP(i1,N)REP(i2,N) {
-      REP(x1,N) REP(x2,N) if(abs(x1-x2)<=1) {
-        SMAX(res.dist[i1][i2],a.dist[i1][x1]+b.dist[x2][i2]);
-      }
-    }
-    return res;
   }
 private:
   void buildTree(const vector<Node> &ns, int i, int l, int r) {
@@ -179,7 +174,13 @@ private:
   }
 };
 
-void solve() {
+int main() {
+  ios_base::sync_with_stdio(false);
+  cin.tie(0);
+  
+  cin>>N>>M>>Q;
+  REP(i,N) REP(j,M) cin>>A[i][j];
+  
   SegmentTree ST(M);
   vector<Node> X;
   REP(j,M) {
@@ -189,32 +190,25 @@ void solve() {
   }
   ST.build(X);
   
-  REP(q,Q) {
-    int r=R[q],c=C[q],val=T[q];
+  REP(i,Q) {
+    int r,c,val;
+    cin>>r>>c>>val;
+    --r,--c;
+    
     A[r][c]=val;
     Node x=Node();
     x.setup(c);
+    
     ST.update(c,x);
-    Node y=ST.query(0,M);
+    // Node y=ST.query(0,M);
+    Node y=ST.Tree[0];
     int res=0;
     REP(i,N)REP(j,N) {
       SMAX(res,y.dist[i][j]);
     }
     cout<<res<<endl;
   }
-}
-int main() {
-  ios_base::sync_with_stdio(false);
-  cin.tie(0);
   
-  cin>>N>>M>>Q;
-  REP(i,N) REP(j,M) cin>>A[i][j];
-  REP(i,Q) {
-    cin>>R[i]>>C[i]>>T[i];
-    R[i]--,C[i]--;
-  }
-  
-  solve();
   return 0;
 }
 
